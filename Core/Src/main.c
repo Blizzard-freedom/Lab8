@@ -44,15 +44,15 @@
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
-char TxDataBuffer[32] =
+char TxDataBuffer[110] =
 { 0 };
 char RxDataBuffer[32] =
 { 0 };
-char TxMenu[120]=
+char TxMenu[110]=
 {0};
 char Status[40]=
 {0};
-char Error[40]=
+char Error[44]=
 {0};
 uint8_t status=0;
 int Time_blink=1;
@@ -62,11 +62,11 @@ uint8_t ucount=0;
 uint8_t pcount=0;
 enum Menu{
   Menu_First_Present=0,
-  Menu_First,
-  Menu_LED_Present=10,
-  Menu_LED,
-  Menu_Button_Present=20,
-  Menu_Button
+  Menu_First=10,
+  Menu_LED_Present=20,
+  Menu_LED=30,
+  Menu_Button_Present=40,
+  Menu_Button=50
 }
 ;
 /* USER CODE END PV */
@@ -130,16 +130,11 @@ int main(void)
 		HAL_UART_Receive_IT(&huart2,  (uint8_t*)RxDataBuffer, 32);
 		/*Method 2 W/ 1 Char Received*/
 		int16_t inputchar = UARTRecieveIT();
-//		if(inputchar!=-1)
-	//			{
-	//				sprintf(TxDataBuffer, "ReceivedChar:[%c]\r\n", inputchar);
-//					HAL_UART_Transmit(&huart2, (uint8_t*)TxDataBuffer, strlen(TxDataBuffer), 1000);
-		//		}
 		switch (state)
 		  {
  case Menu_First_Present:
-     sprintf(TxMenu,"press0_to_LED\r\npress1_to_Button\r\n---------------------------------------------\r\n");
-     HAL_UART_Transmit_IT(&huart2, (uint8_t*)TxMenu, strlen(TxMenu));
+     sprintf(TxDataBuffer,"press0_to_LED\r\npress1_to_Button\r\n---------------------------------------------\r\n");
+     HAL_UART_Transmit_IT(&huart2, (uint8_t*)TxDataBuffer, strlen(TxDataBuffer));
      state = Menu_First;
      break;
    case Menu_First:
@@ -186,8 +181,12 @@ int main(void)
    case 'd':
 	   if(status==0){
 		   status=1;
+		   sprintf(Status,"LED_ON\r\n",Time_blink);
+		   HAL_UART_Transmit_IT(&huart2, (uint8_t*)Status, strlen(Status));
 	   }else{
 		   status=0;
+		   sprintf(Status,"LED_OFF\r\n",Time_blink);
+		   HAL_UART_Transmit_IT(&huart2, (uint8_t*)Status, strlen(Status));
 	   }
 	   break;
    case 'e':
@@ -197,8 +196,8 @@ int main(void)
 	 break;
    default:
 	   sprintf(Error,"-Error-\r\n--------------------------------\r\n");
-	  	   	   HAL_UART_Transmit_IT(&huart2, (uint8_t*)Error, strlen(Error));
-   state = Menu_LED_Present;
+	   HAL_UART_Transmit_IT(&huart2, (uint8_t*)Error, strlen(Error));
+	   state = Menu_LED_Present;
      break;
    }
    break;
