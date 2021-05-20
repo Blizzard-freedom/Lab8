@@ -48,15 +48,10 @@ char TxDataBuffer[110] =
 { 0 };
 char RxDataBuffer[32] =
 { 0 };
-char TxMenu[110]=
+char Status[15]=
 {0};
-char Status[40]=
-{0};
-char Error[44]=
-{0};
-uint8_t status=0;
+int status=0;
 int Time_blink=1;
-uint8_t buttonst;
 uint8_t state =0;
 uint8_t ucount=0;
 uint8_t pcount=0;
@@ -67,8 +62,9 @@ enum Menu{
   Menu_LED=30,
   Menu_Button_Present=40,
   Menu_Button=50
-}
-;
+};
+char error[]="-Error-\r\n--------------------------------\r\n";
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -76,7 +72,6 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_USART2_UART_Init(void);
 /* USER CODE BEGIN PFP */
-void UARTRecieveAndResponsePolling();
 int16_t UARTRecieveIT();
 /* USER CODE END PFP */
 
@@ -116,8 +111,7 @@ int main(void)
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
   {
-  char temp[]="HELLO WORLD\r\n please type something to test UART\r\n";
-  HAL_UART_Transmit(&huart2, (uint8_t*)temp, strlen(temp),10);
+
   }
   /* USER CODE END 2 */
 
@@ -132,11 +126,11 @@ int main(void)
 		int16_t inputchar = UARTRecieveIT();
 		switch (state)
 		  {
- case Menu_First_Present:
-     sprintf(TxDataBuffer,"press0_to_LED\r\npress1_to_Button\r\n---------------------------------------------\r\n");
-     HAL_UART_Transmit_IT(&huart2, (uint8_t*)TxDataBuffer, strlen(TxDataBuffer));
-     state = Menu_First;
-     break;
+   case Menu_First_Present:
+      sprintf(TxDataBuffer,"press0_to_LED\r\npress1_to_Button\r\n---------------------------------------------\r\n");
+      HAL_UART_Transmit(&huart2, (uint8_t*)TxDataBuffer, strlen(TxDataBuffer),10);
+      state = Menu_First;
+      break;
    case Menu_First:
    switch (inputchar)
    {
@@ -149,15 +143,14 @@ int main(void)
    case -1:
      break;
    default:
-	   sprintf(Error,"-Error-\r\n--------------------------------\r\n");
-	   	HAL_UART_Transmit_IT(&huart2, (uint8_t*)Error, strlen(Error));
+	   HAL_UART_Transmit(&huart2, (uint8_t*)error, strlen(error),10);
 	   	state = Menu_First_Present;
      break;
    }
    break;
     case Menu_LED_Present:
-     sprintf(TxMenu,"LED_Control\r\na-increase_frequency\r\ns-decrease_frequency\r\nd-ON/OFF\r\ne-Exit\r\n--------------------------------\r\n");
-     HAL_UART_Transmit_IT(&huart2, (uint8_t*)TxMenu, strlen(TxMenu));
+     sprintf(TxDataBuffer,"LED_Control\r\na-increase_frequency\r\ns-decrease_frequency\r\nd-ON/OFF\r\ne-Exit\r\n--------------------------------\r\n");
+     HAL_UART_Transmit(&huart2, (uint8_t*)TxDataBuffer, strlen(TxDataBuffer),10);
      state = Menu_LED;
      break;
    case Menu_LED:
@@ -195,16 +188,15 @@ int main(void)
    case -1:
 	 break;
    default:
-	   sprintf(Error,"-Error-\r\n--------------------------------\r\n");
-	   HAL_UART_Transmit_IT(&huart2, (uint8_t*)Error, strlen(Error));
+	   HAL_UART_Transmit(&huart2, (uint8_t*)error, strlen(error),10);
 	   state = Menu_LED_Present;
      break;
    }
    break;
 
    case Menu_Button_Present:
-     sprintf(TxMenu,"Button_Status\r\ne-exit\r\n--------------------------------\r\n");
-     HAL_UART_Transmit_IT(&huart2, (uint8_t*)TxMenu, strlen(TxMenu));
+     sprintf(TxDataBuffer,"Button_Status\r\ne-exit\r\n--------------------------------\r\n");
+     HAL_UART_Transmit(&huart2, (uint8_t*)TxDataBuffer, strlen(TxDataBuffer),10);
      state = Menu_Button;
      break;
    case Menu_Button:
@@ -228,8 +220,8 @@ int main(void)
 	     }
   	 break;
    default:
-	   sprintf(Error,"-Error-\r\n--------------------------------\r\n");
-	   HAL_UART_Transmit_IT(&huart2, (uint8_t*)Error, strlen(Error));
+	   HAL_UART_Transmit(&huart2, (uint8_t*)error, strlen(error),10);
+	   state = Menu_Button_Present;
      break;
    }
    break;
@@ -374,11 +366,6 @@ int16_t UARTRecieveIT()
 	return data;
 }
 
-void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
-{
-	sprintf(TxDataBuffer, "Received:[%s]\r\n", RxDataBuffer);
-	//HAL_UART_Transmit(&huart2, (uint8_t*)TxDataBuffer, strlen(TxDataBuffer), 1000);
-}
 /* USER CODE END 4 */
 
 /**
